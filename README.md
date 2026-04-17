@@ -19,7 +19,6 @@ sign-lang-to-text/
 ├── demo.py
 ├── download_data.py
 ├── model.py
-├── PROJECT_SUMMARY.md
 ├── README.md
 ├── requirements.txt
 ├── setup.py
@@ -51,27 +50,57 @@ pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
 chmod 600 ~/.kaggle/kaggle.json
 ```
 
-## Usage
+## Workflow
 
-### Download Dataset
+### Data Preparation
+
+Option A: Download the ASL Alphabet dataset from Kaggle:
 
 ```bash
 python download_data.py --dataset alphabet
 ```
 
+Option B: Create synthetic test data for quick testing:
+
+```bash
+python create_test_data.py --samples 100
+```
+
 ### Train the Model
 
 ```bash
-python train.py --data_dir ./data/asl_alphabet_train/asl_alphabet_train --epochs 10 --batch_size 32
+python train.py --data_dir ./data/asl_alphabet_train/asl_alphabet_train --epochs 10 --batch_size 32 --lr 0.001
 ```
 
-The trained model is saved as `asl_model.pth`.
+For CPU-only training, reduce the batch size:
+
+```bash
+python train.py --data_dir ./data/asl_alphabet_train/asl_alphabet_train --epochs 10 --batch_size 8
+```
 
 ### Run the Application
 
 ```bash
 python app.py
 ```
+
+## Model Architecture
+
+The project uses a custom CNN called ASLNet with the following structure:
+
+- Input: 3 x 200 x 200 RGB image
+- Conv Block 1: 32 filters, batch norm, ReLU, max pool, dropout(0.25)
+- Conv Block 2: 64 filters, batch norm, ReLU, max pool, dropout(0.25)
+- Conv Block 3: 128 filters, batch norm, ReLU, max pool, dropout(0.25)
+- Fully connected layer: 80,000 -> 512, batch norm, ReLU, dropout(0.5)
+- Output layer: 512 -> 29 classes
+
+## Training Pipeline
+
+- Optimizer: Adam
+- Loss: CrossEntropyLoss
+- Scheduler: ReduceLROnPlateau
+- Data augmentation: random rotation, color jitter, normalization
 
 ## Application Guide
 
@@ -84,28 +113,40 @@ python app.py
 ## Recognition Logic
 
 - The app detects hand signs continuously
-- If a prediction remains stable with confidence above 70%, it adds the character to the text
-- Special characters:
+- If a prediction remains stable for 15 frames and confidence is above 70%, the character is added to text
+- Special predictions:
   - `space`: adds a space
   - `del`: deletes the last character
   - `nothing`: no action
 
-## Model Architecture
+## Performance Benchmarks
 
-- 3 convolutional blocks with 32, 64, and 128 filters
-- Batch normalization after each convolution
-- Max pooling layers
-- Dropout regularization
-- Fully connected classifier with 29 output classes
-- Input image size: 200x200 RGB
+### Training (10 epochs, 87K images)
 
-## Dataset Information
+- GPU training: 30-45 minutes with a high-end GPU
+- CPU training: 2-4 hours with a mid-range CPU
 
-The ASL Alphabet dataset from Kaggle includes:
+### Inference
 
-- 87,000 training images
-- 29 classes: A-Z, space, delete, nothing
-- 200x200 color images
+- GPU inference: about 5-10 ms per image
+- CPU inference: about 50-100 ms per image
+
+## Configuration Options
+
+### Training parameters
+
+- `--data_dir`: Path to training data
+- `--epochs`: Number of epochs
+- `--batch_size`: Batch size
+- `--lr`: Learning rate
+
+### Application settings
+
+In `app.py`, adjust:
+
+- camera index
+- confidence threshold
+- stability frame count
 
 ## GPU Support
 
@@ -115,18 +156,11 @@ The application uses CUDA if available:
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 ```
 
-## Performance Tips
-
-- Use a GPU-enabled PyTorch build for faster training
-- Increase batch size if GPU memory allows
-- Use data augmentation for better results
-- Adjust the confidence threshold in `app.py` if needed
-
 ## Troubleshooting
 
 ### Model not found
 
-- Make sure `asl_model.pth` exists
+- Ensure `asl_model.pth` exists
 - Train the model first using `train.py`
 
 ### Kaggle API errors
