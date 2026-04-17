@@ -1,82 +1,74 @@
-# ASL Sign Language to Text Converter
+﻿# ASL Sign Language to Text Converter
 
-A desktop application that converts American Sign Language (ASL) hand signs to text using deep learning. Built with PyTorch and OpenCV, supporting real-time camera input, image processing, and video analysis.
+A desktop application that converts American Sign Language (ASL) hand signs to text using deep learning. It is built with PyTorch, OpenCV, and Tkinter, and supports webcam input, image prediction, and video analysis.
 
 ## Features
 
-- **Real-time Camera Detection**: Live webcam feed with ASL recognition
-- **Image Processing**: Upload and analyze static images
-- **Video Processing**: Process pre-recorded videos
-- **GPU Acceleration**: Utilizes CUDA for faster inference
-- **29 Classes**: Recognizes A-Z letters + space, delete, and nothing gestures
+- Real-time camera detection for ASL gestures
+- Image upload and prediction
+- Video file prediction
+- GPU support with CUDA when available
+- Recognizes 29 classes: A-Z, space, delete, and nothing
 
 ## Project Structure
 
 ```
-asl-sign-language/
-├── model.py              # CNN architecture definition
-├── train.py              # Model training script
-├── app.py                # Desktop application (GUI)
-├── download_data.py      # Dataset download utility
-├── requirements.txt      # Python dependencies
-└── README.md            # This file
+sign-lang-to-text/
+├── app.py
+├── create_test_data.py
+├── demo.py
+├── download_data.py
+├── model.py
+├── PROJECT_SUMMARY.md
+├── QUICKSTART.md
+├── README.md
+├── requirements.txt
+├── setup.py
+└── train.py
 ```
 
 ## Installation
 
-### 1. Clone or Create Project Directory
-
-```bash
-mkdir asl-sign-language
-cd asl-sign-language
-```
-
-### 2. Install Dependencies
+### 1. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-For GPU support, install PyTorch with CUDA:
+### 2. Install GPU-enabled PyTorch (optional)
+
 ```bash
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
 ```
 
-### 3. Setup Kaggle API (for dataset download)
+### 3. Setup Kaggle API
 
 1. Create a Kaggle account at https://www.kaggle.com
-2. Go to Account → Create New API Token
-3. Place `kaggle.json` in `~/.kaggle/` directory (Linux/Mac) or `C:\Users\<YourUsername>\.kaggle\` (Windows)
-4. Set permissions (Linux/Mac only):
+2. Create a new API token
+3. Place `kaggle.json` in `~/.kaggle/` on Linux/Mac or `C:\Users\<YourUsername>\.kaggle\` on Windows
+4. Set permissions on Linux/Mac:
+
 ```bash
 chmod 600 ~/.kaggle/kaggle.json
 ```
 
 ## Usage
 
-### Step 1: Download Dataset
+### Download Dataset
 
 ```bash
 python download_data.py --dataset alphabet
 ```
 
-This downloads the ASL Alphabet dataset (~1.1GB) with 87,000 training images.
-
-### Step 2: Train the Model
+### Train the Model
 
 ```bash
 python train.py --data_dir ./data/asl_alphabet_train/asl_alphabet_train --epochs 10 --batch_size 32
 ```
 
-Training takes approximately 30-60 minutes with GPU. The trained model is saved as `asl_model.pth`.
+The trained model is saved as `asl_model.pth`.
 
-**Training Parameters:**
-- `--data_dir`: Path to training data
-- `--epochs`: Number of training epochs (default: 10)
-- `--batch_size`: Batch size (default: 32)
-- `--lr`: Learning rate (default: 0.001)
-
-### Step 3: Run the Application
+### Run the Application
 
 ```bash
 python app.py
@@ -84,104 +76,97 @@ python app.py
 
 ## Application Guide
 
-### Main Features
+- Start Camera: start live webcam ASL recognition
+- Stop Camera: stop the webcam feed
+- Load Image: predict an uploaded image
+- Load Video: predict signs from a video
+- Clear Text: reset detected text output
 
-1. **Start Camera**: Begin real-time ASL recognition from webcam
-2. **Stop Camera**: Stop the camera feed
-3. **Load Image**: Upload a single image for prediction
-4. **Load Video**: Process a video file
-5. **Clear Text**: Reset the detected text
-
-### Recognition Logic
+## Recognition Logic
 
 - The app detects hand signs continuously
-- When a prediction is stable for ~0.5 seconds with >70% confidence, it adds the character to text
-- **Special characters**:
-  - `space`: Adds a space
-  - `del`: Deletes the last character
-  - `nothing`: No action (idle hand position)
+- If a prediction remains stable with confidence above 70%, it adds the character to the text
+- Special characters:
+  - `space`: adds a space
+  - `del`: deletes the last character
+  - `nothing`: no action
 
 ## Model Architecture
 
-**ASLNet CNN Architecture:**
-- 3 Convolutional blocks (32, 64, 128 filters)
-- Batch normalization after each conv layer
-- Max pooling (2x2) after each block
-- Dropout (0.25) for regularization
-- Fully connected layers: 512 → 29 classes
-- Input: 200x200 RGB images
-- Output: 29 class probabilities
+- 3 convolutional blocks with 32, 64, and 128 filters
+- Batch normalization after each convolution
+- Max pooling layers
+- Dropout regularization
+- Fully connected classifier with 29 output classes
+- Input image size: 200x200 RGB
 
 ## Dataset Information
 
-**ASL Alphabet Dataset** (Kaggle):
+The ASL Alphabet dataset from Kaggle includes:
+
 - 87,000 training images
 - 29 classes: A-Z, space, delete, nothing
-- 200x200 colored images
-- Each class has ~3,000 images
+- 200x200 color images
 
 ## GPU Support
 
-The application automatically detects and uses CUDA GPU if available:
+The application uses CUDA if available:
+
 ```python
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 ```
 
-Check GPU availability:
-```python
-import torch
-print(f"CUDA Available: {torch.cuda.is_available()}")
-print(f"Device: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU'}")
-```
-
 ## Performance Tips
 
-1. **GPU Training**: Use CUDA-enabled GPU for 10-20x faster training
-2. **Batch Size**: Increase if you have more GPU memory (try 64 or 128)
-3. **Data Augmentation**: Enabled by default (flips, rotations, color jitter)
-4. **Confidence Threshold**: Adjust in app.py (default: 70%)
+- Use a GPU-enabled PyTorch build for faster training
+- Increase batch size if GPU memory allows
+- Use data augmentation for better results
+- Adjust the confidence threshold in `app.py` if needed
 
 ## Troubleshooting
 
-**Model not loading:**
-- Ensure `asl_model.pth` exists in the project directory
+### Model not found
+
+- Make sure `asl_model.pth` exists
 - Train the model first using `train.py`
 
-**Kaggle API errors:**
-- Check `kaggle.json` is in correct location
-- Verify Kaggle credentials are valid
-- Run `kaggle datasets list` to test connection
+### Kaggle API errors
 
-**Camera not working:**
+- Verify that `kaggle.json` is in the correct location
+- Confirm Kaggle credentials are valid
+- Run `kaggle datasets list` to test the connection
+
+### Camera not working
+
 - Check camera permissions
-- Try changing camera index in `cv2.VideoCapture(0)` to `cv2.VideoCapture(1)`
+- Try a different camera index in `app.py`: `cv2.VideoCapture(1)`
 
-**CUDA out of memory:**
-- Reduce batch size
-- Use CPU instead: `device = torch.device('cpu')`
+### CUDA out of memory
 
-## Future Enhancements
+- Reduce `batch_size`
+- Use CPU only with `device = torch.device('cpu')`
 
-- [ ] Add word and sentence recognition
-- [ ] Implement MediaPipe hand tracking for better accuracy
-- [ ] Support for continuous sign language (not just alphabet)
-- [ ] Mobile app version
-- [ ] Real-time translation to multiple languages
+## Future Work
+
+- Add word and sentence recognition
+- Implement MediaPipe hand tracking
+- Support continuous sign language recognition
+- Add a mobile version
+- Add real-time translation to other languages
 
 ## Technical Stack
 
-- **PyTorch**: Deep learning framework
-- **OpenCV**: Computer vision and camera handling
-- **Tkinter**: GUI framework
-- **Pillow**: Image processing
-- **Kaggle API**: Dataset management
+- PyTorch
+- OpenCV
+- Tkinter
+- Pillow
+- Kaggle API
 
 ## License
 
-Educational project for portfolio purposes.
+This project is for educational use.
 
 ## Credits
 
-- Dataset: ASL Alphabet by Akash (Kaggle)
-- Framework: PyTorch, OpenCV
-- Developed: July 2025
+- ASL Alphabet dataset from Kaggle
+- Developed using PyTorch and OpenCV

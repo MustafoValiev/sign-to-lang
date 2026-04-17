@@ -31,6 +31,7 @@ wheels/
 # Data
 data/
 data_mnist/
+test_data/
 *.zip
 *.csv
 
