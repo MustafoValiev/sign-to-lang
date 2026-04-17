@@ -20,7 +20,6 @@ sign-lang-to-text/
 ├── download_data.py
 ├── model.py
 ├── PROJECT_SUMMARY.md
-├── QUICKSTART.md
 ├── README.md
 ├── requirements.txt
 ├── setup.py
